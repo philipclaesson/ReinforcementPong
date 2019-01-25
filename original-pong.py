@@ -91,8 +91,7 @@ while True:
   reward_sum += reward
 
   drs.append(reward) # record reward (has to be done after we call step() to get reward for previous action)
-  print(reward)
-  if done: # an episode finished
+  if done: # an episode finished (a game of 20 was either lost or won)
     print("an episode finished, reward: " + str(reward))
     episode_number += 1
 
