@@ -9,7 +9,7 @@ batch_size = 10 # every how many episodes to do a param update?
 learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-resume = False # resume from previous checkpoint?
+resume = True # resume from previous checkpoint?
 render = False
 
 # model initialization
@@ -122,7 +122,7 @@ while True:
 
     # boring book-keeping
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
-    # print ('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
+    print ('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
     if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
     reward_sum = 0
     observation = env.reset() # reset env
@@ -130,4 +130,4 @@ while True:
 
   if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
     pass
-    #print (("ep {}: game finished, reward: {}".format(episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
+    # print (("ep {}: game finished, reward: {}".format(episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!'))
