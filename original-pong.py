@@ -10,7 +10,7 @@ learning_rate = 1e-4
 gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 resume = False # resume from previous checkpoint?
-render = False
+render = True
 
 # model initialization
 D = 80 * 80 # input dimensionality: 80x80 grid
@@ -91,8 +91,9 @@ while True:
   reward_sum += reward
 
   drs.append(reward) # record reward (has to be done after we call step() to get reward for previous action)
-
+  print(reward)
   if done: # an episode finished
+    print("an episode finished, reward: " + str(reward))
     episode_number += 1
 
     # stack together all inputs, hidden states, action gradients, and rewards for this episode

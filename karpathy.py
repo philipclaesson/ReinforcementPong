@@ -5,14 +5,7 @@ import gym
 import time
 import PolNet
 
-delay = 0.02 # lil delay to make the game watchable for humans.
 
-
-# model initialization
-D = 80 * 80 # input dimensionality: 80x80 grid
-
-def sigmoid(x):
-  return 1.0 / (1.0 + np.exp(-x)) # sigmoid "squashing" function to interval [0,1]
 
 def prepro(I):
   """ prepro 210x160x3 uint8 frame into 6400 (80x80) 1D float vector """
@@ -23,73 +16,79 @@ def prepro(I):
   I[I != 0] = 1 # everything else (paddles, ball) just set to 1
   return I.astype(np.float).ravel()
 
-# Create a new polnet
-model = PolNet()
-
+delay = 0 # lil delay. 0.02 makes the game watchable for humans.
 env = gym.make("Pong-v0")
 observation = env.reset()
 prev_x = None # used in computing the difference frame
-xs,hs,dlogps,drs = [],[],[],[]
 running_reward = None
 reward_sum = 0
 episode_number = 0
+rewards = []
+render = True
+
+# Create a new polnet
+model = PolNet.PolNet()
+
+
+our_score = 0
+their_score = 0
+wins = 0
+losses = 0
+first_ep_win = -1
+win_counter = []
 
 while True:
   if render: env.render()
-  time.sleep(delay)
+  if delay: time.sleep(delay)
   # preprocess the observation, set input to network to be difference image
   cur_x = prepro(observation)
-  x = cur_x - prev_x if prev_x is not None else np.zeros(D)
+  x = cur_x - prev_x if prev_x is not None else np.zeros(model.D)
   prev_x = cur_x
 
-  # forward the policy network and sample an action from the returned probability
-  aprob, h = model.policy_forward(x)
-  action = 2 if np.random.uniform() < aprob else 3 # roll the dice!
-
-  # record various intermediates (needed later for backprop)
-  xs.append(x) # observation
-  hs.append(h) # hidden state
-  y = 1 if action == 2 else 0 # a "fake label"
-  dlogps.append(y - aprob) # grad that encourages the action that was taken to be taken (see http://cs231n.github.io/neural-networks-2/#losses if confused)
+  # send the state to the model to get an action
+  action = model.step(x)
 
   # step the environment and get new measurements
   observation, reward, done, info = env.step(action)
   reward_sum += reward
 
-  drs.append(reward) # record reward (has to be done after we call step() to get reward for previous action)
+  # If someone won the round, keep track of points.
+  if (reward):
+      our_score += 1
+      wins += 1
+  elif (reward == -1):
+      their_score += 1
+      losses +=1
 
-  if done: # an episode finished
+# record reward (has to be done after we call step() to get reward for previous action)
+  rewards.append(reward)
+
+  if done: # an episode finished (a game of 20 was either lost or won)
     episode_number += 1
 
+    # keep track of how many rounds we won this episode
+    win_counter.append(wins)
+
+    # was this the first episode win?
+    if (wins == 20 and not first_ep_win):
+        first_ep_win = episode_number
+        print("Won the first game after {} episodes. ".format(first_ep_win))
+        pickle.dump(first_ep_win, open('{}_first_ep_win'.format(model.name), 'wb'))
+        pickle.dump(win_counter, open('{}_win_counter'.format(model.name), 'wb'))
+
+    # reset
+    wins, losses = 0, 0
+
     # stack together all inputs, hidden states, action gradients, and rewards for this episode
-    epx = np.vstack(xs)
-    eph = np.vstack(hs)
-    epdlogp = np.vstack(dlogps)
-    epr = np.vstack(drs)
-    xs,hs,dlogps,drs = [],[],[],[] # reset array memory
+    episode_rewards = np.vstack(rewards)
+    rewards = [] # reset array memory
 
-    # compute the discounted reward backwards through time
-    discounted_epr = discount_rewards(epr)
-    # standardize the rewards to be unit normal (helps control the gradient estimator variance)
-    discounted_epr -= np.mean(discounted_epr)
-    discounted_epr /= np.std(discounted_epr)
-
-    epdlogp *= discounted_epr # modulate the gradient with advantage (PG magic happens right here.)
-    grad = policy_backward(eph, epdlogp)
-    for k in model: grad_buffer[k] += grad[k] # accumulate grad over batch
-
-    # perform rmsprop parameter update every batch_size episodes
-    if episode_number % batch_size == 0:
-      for k,v in model.items():
-        g = grad_buffer[k] # gradient
-        rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
-        model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
-        grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+    # feed the episode data to the model for policy update
+    model.update(episode_rewards, episode_number)
 
     # boring book-keeping
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
-    print ('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
-    if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
+    # print ('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
     reward_sum = 0
     observation = env.reset() # reset env
     prev_x = None
