@@ -18,7 +18,7 @@ class PolNet():
         this.observations, this.hidden_states, this.dlogps = [],[],[]
 
         if this.resume:
-          this.model = pickle.load(open('save.p', 'rb'))
+          this.model = pickle.load(open('{}_model.p'.format(this.name), 'rb'))
 
         else:
           this.model = {}
@@ -66,15 +66,16 @@ class PolNet():
 
         # perform rmsprop parameter update every batch_size episodes
         if episode_number % this.batch_size == 0:
-          for k,v in model.items():
-            g = grad_buffer[k] # gradient
-            this.rmsprop_cache[k] = decay_rate * this.rmsprop_cache[k] + (1 - decay_rate) * g**2
-            this.model[k] += learning_rate * g / (np.sqrt(this.rmsprop_cache[k]) + 1e-5)
+          for k,v in this.model.items():
+            g = this.grad_buffer[k] # gradient
+            this.rmsprop_cache[k] = this.decay_rate * this.rmsprop_cache[k] + (1 - this.decay_rate) * g**2
+            this.model[k] += this.learning_rate * g / (np.sqrt(this.rmsprop_cache[k]) + 1e-5)
             this.grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
 
         # save model to file
-        if episode_number % 100 == 0: pickle.dump(this.model, open('{}_model.p'.format(this.name), 'wb'))
-
+        if (episode_number % 100 == 0):
+            pickle.dump(this.model, open('{}_model.p'.format(this.name), 'wb'))
+            print('Saved model...')
 
     def discount_rewards(this, r):
       """ take 1D float array of rewards and compute discounted reward """
