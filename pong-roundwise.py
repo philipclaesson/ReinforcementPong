@@ -1,4 +1,6 @@
-""" Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym. """
+""" Trains an agent with (stochastic) Policy Gradients on Pong. Uses OpenAI Gym.
+    difference from the original Pong.py is that we update for every round instead of every episode
+    (an episode consists of 20 games.)"""
 import numpy as np
 import _pickle as pickle
 import gym
@@ -22,20 +24,14 @@ observation = env.reset()
 prev_x = None # used in computing the difference frame
 running_reward = None
 reward_sum = 0
+round_number = 0
 episode_number = 0
 rewards = []
 render = False
 
 # Create a new polnet
 model = PolNet.PolNet()
-
-# Load the episode number if we decide to restart training (because we want to know how many episodes we have trained right.)
-if model.resume:
-    try:
-        episode_number = pickle.load(open('{}_episode_number'.format(model.name), 'rb'))
-    except:
-        episode_number = 0
-    print("Episode number initialized as {}".format(episode_number))
+model.name = "Karp_PolNet_rw"
 
 our_score = 0
 their_score = 0
@@ -43,6 +39,15 @@ wins = 0
 losses = 0
 first_ep_win = -1
 win_counter = []
+
+# Load the episode number if we decide to restart training (because we want to know how many episodes we have trained right.)
+if model.resume:
+    try:
+        episode_number = pickle.load(open('{}_episode_number_rw '.format(model.name), 'rb'))
+    except:
+        episode_number = 0
+    print("Episode number initialized as {}".format(episode_number))
+
 
 while True:
   if render: env.render()
@@ -70,30 +75,34 @@ while True:
 # record reward (has to be done after we call step() to get reward for previous action)
   rewards.append(reward)
 
+
+  # if the round is over (someone scored, so reward is -1 or 1)
+  if (reward != 0):
+    round_number += 1
+
+    # stack together all inputs, hidden states, action gradients, and rewards for this episode
+    round_rewards = np.vstack(rewards)
+    rewards = [] # reset array memory
+
+    # feed the episode data to the model for policy update
+    model.update(round_rewards, round_number)
+
+
   if done: # an episode finished (a game of 20 was either lost or won)
     episode_number += 1
 
-    if (episode_number % 100 == 0):
-        pickle.dump(episode_number, open('{}_episode_number'.format(model.name), 'wb'))
-
     # keep track of how many rounds we won this episode
     win_counter.append(wins)
+
     # was this the first episode win?
     if (wins == 20 and first_ep_win == -1):
         first_ep_win = episode_number
         print("Won the first game after {} episodes. ".format(first_ep_win))
-        pickle.dump(first_ep_win, open('{}_first_ep_win'.format(model.name), 'wb'))
-        pickle.dump(win_counter, open('{}_win_counter'.format(model.name), 'wb'))
+        pickle.dump(first_ep_win, open('{}_first_ep_win_rw'.format(model.name), 'wb'))
+        pickle.dump(win_counter, open('{}_win_counter_rw'.format(model.name), 'wb'))
 
     # reset
     wins, losses = 0, 0
-
-    # stack together all inputs, hidden states, action gradients, and rewards for this episode
-    episode_rewards = np.vstack(rewards)
-    rewards = [] # reset array memory
-
-    # feed the episode data to the model for policy update
-    model.update(episode_rewards, episode_number)
 
     # boring book-keeping
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01

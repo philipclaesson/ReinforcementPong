@@ -1,12 +1,16 @@
 import numpy as np
 import _pickle as pickle
+<<<<<<< HEAD
+=======
+
+>>>>>>> 10b9ddaa7b0b49530098a040c954bc1e590e08c0
 class PolNet():
     "Karpathys implementation of a policy network"
     def __init__(this):
         # hyperparameters
         this.name = "Karp_PolNet"
         this.H = 200 # number of hidden layer neurons
-        this.batch_size = 10 # every how many episodes to do a param update?
+        this.batch_size = 10 # every how many rounds to do a param update?
         this.learning_rate = 1e-4
         this.gamma = 0.99 # discount factor for reward
         this.decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
