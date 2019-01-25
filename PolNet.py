@@ -1,4 +1,5 @@
 import numpy as np
+import _pickle as pickle
 class PolNet():
     "Karpathys implementation of a policy network"
     def __init__(this):
