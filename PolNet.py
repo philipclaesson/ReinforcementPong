@@ -5,13 +5,13 @@ class PolNet():
     "Karpathys implementation of a policy network"
     def __init__(this):
         # hyperparameters
-        this.name = "Karp_PolNet"
+        this.name = "Karp_PolNet_rw"
         this.H = 200 # number of hidden layer neurons
         this.batch_size = 10 # every how many rounds to do a param update?
         this.learning_rate = 1e-4
         this.gamma = 0.99 # discount factor for reward
         this.decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
-        this.resume = False
+        this.resume = True
 
         # model initialization
         this.D = 80 * 80 # input dimensionality: 80x80 grid
@@ -20,7 +20,8 @@ class PolNet():
         this.observations, this.hidden_states, this.dlogps = [],[],[]
 
         if this.resume:
-          this.model = pickle.load(open('{}_model.p'.format(this.name), 'rb'))
+          this.model = pickle.load(open('{}_model_v1.p'.format(this.name), 'rb'))
+          print("Loaded model '{}_model_v1.p'".format(this.name))
 
         else:
           this.model = {}
@@ -106,7 +107,4 @@ class PolNet():
 
     def sigmoid(this, x):
         return 1.0 / (1.0 + np.exp(-x)) # sigmoid "squashing" function to interval [0,1]
-
-
-
 

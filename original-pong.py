@@ -11,7 +11,7 @@ gamma = 0.99 # discount factor for reward
 decay_rate = 0.99 # decay factor for RMSProp leaky sum of grad^2
 
 resume = True # resume from previous checkpoint?
-render = False
+render = True
 
 
 # model initialization
