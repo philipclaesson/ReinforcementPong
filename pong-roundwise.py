@@ -18,7 +18,7 @@ def prepro(I):
   I[I != 0] = 1 # everything else (paddles, ball) just set to 1
   return I.astype(np.float).ravel()
 
-delay = 0 # lil delay. 0.02 makes the game watchable for humans.
+delay = 0.02 # lil delay. 0.02 makes the game watchable for humans.
 env = gym.make("Pong-v0")
 observation = env.reset()
 prev_x = None # used in computing the difference frame
@@ -27,7 +27,7 @@ reward_sum = 0
 round_number = 0
 episode_number = 0
 rewards = []
-render = False
+render = True
 
 # Create a new polnet
 model = PolNet.PolNet()
@@ -43,7 +43,7 @@ win_counter = []
 # Load the episode number if we decide to restart training (because we want to know how many episodes we have trained right.)
 if model.resume:
     try:
-        episode_number = pickle.load(open('{}_episode_number_rw '.format(model.name), 'rb'))
+        episode_number = pickle.load(open('{}_episode_number_rw.p'.format(model.name), 'rb'))
     except:
         episode_number = 0
     print("Episode number initialized as {}".format(episode_number))
@@ -98,8 +98,8 @@ while True:
     if (wins == 20 and first_ep_win == -1):
         first_ep_win = episode_number
         print("Won the first game after {} episodes. ".format(first_ep_win))
-        pickle.dump(first_ep_win, open('{}_first_ep_win_rw'.format(model.name), 'wb'))
-        pickle.dump(win_counter, open('{}_win_counter_rw'.format(model.name), 'wb'))
+        pickle.dump(first_ep_win, open('{}_first_ep_win_rw.p'.format(model.name), 'wb'))
+        pickle.dump(win_counter, open('{}_win_counter_rw.p'.format(model.name), 'wb'))
 
     # reset
     wins, losses = 0, 0

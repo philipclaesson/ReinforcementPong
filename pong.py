@@ -32,7 +32,7 @@ model = PolNet.PolNet()
 # Load the episode number if we decide to restart training (because we want to know how many episodes we have trained right.)
 if model.resume:
     try:
-        episode_number = pickle.load(open('{}_episode_number'.format(model.name), 'rb'))
+        episode_number = pickle.load(open('{}_episode_number.p'.format(model.name), 'rb'))
     except:
         episode_number = 0
     print("Episode number initialized as {}".format(episode_number))
@@ -74,7 +74,7 @@ while True:
     episode_number += 1
 
     if (episode_number % 100 == 0):
-        pickle.dump(episode_number, open('{}_episode_number'.format(model.name), 'wb'))
+        pickle.dump(episode_number, open('{}_episode_number.p'.format(model.name), 'wb'))
 
     # keep track of how many rounds we won this episode
     win_counter.append(wins)
@@ -82,8 +82,8 @@ while True:
     if (wins == 20 and first_ep_win == -1):
         first_ep_win = episode_number
         print("Won the first game after {} episodes. ".format(first_ep_win))
-        pickle.dump(first_ep_win, open('{}_first_ep_win'.format(model.name), 'wb'))
-        pickle.dump(win_counter, open('{}_win_counter'.format(model.name), 'wb'))
+        pickle.dump(first_ep_win, open('{}_first_ep_win.p'.format(model.name), 'wb'))
+        pickle.dump(win_counter, open('{}_win_counter.p'.format(model.name), 'wb'))
 
     # reset
     wins, losses = 0, 0
