@@ -127,7 +127,7 @@ class PolNet:
             action_index = 0
             if t % self.FRAME_PER_ACTION == 0:
                 if random.random() <= epsilon:
-                    print("----------Random Action----------")
+                    # print("----------Random Action----------")
                     action_index = random.randrange(self.ACTIONS)
                     a_t[random.randrange(self.ACTIONS)] = 1
                 else:
@@ -144,7 +144,7 @@ class PolNet:
 
             # run the selected action and observe next state and reward
             action = np.argmax(a_t) + 2
-            print(action)
+            # print(action)
             x_t1_colored, r_t, terminal, info = self.env.step(action)
             if terminal:
                 self.env.reset()
@@ -203,9 +203,10 @@ class PolNet:
             else:
                 state = "train"
 
-            print("TIMESTEP", t, "/ STATE", state, \
-                "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, \
-                "/ Q_MAX %e" % np.max(readout_t))
+            if (t % 1000 == 0):
+                print("TIMESTEP", t, "/ STATE", state, \
+                    "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, \
+                    "/ Q_MAX %e" % np.max(readout_t))
 
 def playGame():
     sess = tf.InteractiveSession()
