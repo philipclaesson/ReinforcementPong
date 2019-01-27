@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 import tensorflow as tf
-import cv2
+from cv2 import cvtColor, resize, threshold, COLOR_BGR2GRAY, THRESH_BINARY
 import sys
 import random
 import numpy as np
@@ -101,8 +101,8 @@ class PolNet:
         x_t = self.env.reset()
         r_0 = 0
         terminal = False
-        x_t = cv2.cvtColor(cv2.resize(x_t, (80, 80)), cv2.COLOR_BGR2GRAY)
-        ret, x_t = cv2.threshold(x_t,1,255,cv2.THRESH_BINARY)
+        x_t = cvtColor(resize(x_t, (80, 80)), COLOR_BGR2GRAY)
+        ret, x_t = threshold(x_t,1,255,THRESH_BINARY)
         s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
 
         # saving and loading networks
@@ -148,8 +148,8 @@ class PolNet:
             x_t1_colored, r_t, terminal, info = self.env.step(action)
             if terminal:
                 self.env.reset()
-            x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (80, 80)), cv2.COLOR_BGR2GRAY)
-            ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
+            x_t1 = cvtColor(resize(x_t1_colored, (80, 80)), COLOR_BGR2GRAY)
+            ret, x_t1 = threshold(x_t1, 1, 255, THRESH_BINARY)
             x_t1 = np.reshape(x_t1, (80, 80, 1))
             #s_t1 = np.append(x_t1, s_t[:,:,1:], axis = 2)
             s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
