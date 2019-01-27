@@ -2,18 +2,15 @@
 from __future__ import print_function
 
 import tensorflow as tf
-from cv2 import cvtColor, resize, threshold, COLOR_BGR2GRAY, THRESH_BINARY
 import sys
 import random
 import numpy as np
 from collections import deque
 import gym
 
-
-class PolNet:
+class DQL:
 
     def __init__(self):
-
         self.env = gym.make("Pong-v0")
         self.GAME = "pong"
         self.ACTIONS = 2 # number of valid actions
@@ -101,8 +98,9 @@ class PolNet:
         x_t = self.env.reset()
         r_0 = 0
         terminal = False
-        x_t = cvtColor(resize(x_t, (80, 80)), COLOR_BGR2GRAY)
-        ret, x_t = threshold(x_t,1,255,THRESH_BINARY)
+        x_t = self.prepro(x_t)
+        # x_t = cvtColor(resize(x_t, (80, 80)), COLOR_BGR2GRAY)
+        # ret, x_t = threshold(x_t,1,255,THRESH_BINARY)
         s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
 
         # saving and loading networks
@@ -118,7 +116,7 @@ class PolNet:
         # start training
         epsilon = self.INITIAL_EPSILON
         t = 0
-        while "flappy bird" != "angry bird":
+        while True:
             if self.render:
                 self.env.render()
             # choose an action epsilon greedily
@@ -148,11 +146,12 @@ class PolNet:
             x_t1_colored, r_t, terminal, info = self.env.step(action)
             if terminal:
                 self.env.reset()
-            x_t1 = cvtColor(resize(x_t1_colored, (80, 80)), COLOR_BGR2GRAY)
-            ret, x_t1 = threshold(x_t1, 1, 255, THRESH_BINARY)
-            x_t1 = np.reshape(x_t1, (80, 80, 1))
+            # x_t1 = cvtColor(resize(x_t1_colored, (80, 80)), COLOR_BGR2GRAY)
+            x_t1 = self.prepro(x_t1_colored)
+            # ret, x_t1 = threshold(x_t1, 1, 255, THRESH_BINARY)
+            # x_t1 = np.reshape(x_t1, (80, 80, 1))
             #s_t1 = np.append(x_t1, s_t[:,:,1:], axis = 2)
-            s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
+            s_t1 = np.append(np.expand_dims(x_t1, axis=2), s_t[:, :, :3], axis=2)
 
             # store the transition in D
             D.append((s_t, a_t, r_t, s_t1, terminal))
@@ -207,6 +206,15 @@ class PolNet:
                 print("TIMESTEP", t, "/ STATE", state, \
                     "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, \
                     "/ Q_MAX %e" % np.max(readout_t))
+
+    def prepro(self, I):
+      """ prepro 210x160x3 uint8 frame into 80x80x1 matrix"""
+      I = I[35:195] # crop
+      I = I[::2,::2, 0] # downsample by factor of 2
+      I[I == 144] = 0 # erase background (background type 1)
+      I[I == 109] = 0 # erase background (background type 2)
+      I[I != 0] = 1 # everything else (paddles, ball) just set to 1
+      return I.astype(np.float)
 
 def playGame():
     sess = tf.InteractiveSession()

@@ -3,7 +3,7 @@ import numpy as np
 import _pickle as pickle
 import gym
 import time
-import PolNet
+import DQL
 import tensorflow as tf
 
 
@@ -27,17 +27,7 @@ rewards = []
 render = False
 
 # Create a new polnet
-model = PolNet.PolNet()
-
-# Load the episode number if we decide to restart training (because we want to know how many episodes we have trained right.)
-'''
-if model.resume:
-    try:
-        episode_number = pickle.load(open('{}_episode_number'.format(model.name), 'rb'))
-    except:
-        episode_number = 0
-    print("Episode number initialized as {}".format(episode_number))
-'''
+model = DQL.DQL()
 
 our_score = 0
 their_score = 0
@@ -46,7 +36,7 @@ losses = 0
 first_ep_win = -1
 win_counter = []
 
-model = PolNet.PolNet()
+model = DQL.DQL()
 sess = tf.InteractiveSession()
 
 s, readout, h_fc1 = model.createNetwork()
