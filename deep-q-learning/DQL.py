@@ -23,7 +23,7 @@ class DQL:
         self.BATCH = 32 # size of minibatch
         self.FRAME_PER_ACTION = 1
         self.D = 80*80
-        self.render = False
+        self.render = True
 
     def weight_variable(self, shape):
         initial = tf.truncated_normal(shape, stddev = 0.01)

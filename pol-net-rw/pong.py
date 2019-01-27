@@ -26,7 +26,7 @@ reward_sum = 0
 round_number = 0
 episode_number = 0
 rewards = []
-render = False
+render = True
 
 # Create a new polnet
 model = PolNet.PolNet()
